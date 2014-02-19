@@ -82,7 +82,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Chip.ico" />
-    <Content Include="ftd2xx.dll" />
+    <Content Include="ftd2xx.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
