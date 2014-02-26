@@ -96,7 +96,8 @@ namespace FTDIChipList
         {
             if (DeviceList.SelectedRows.Count > 0)
             {
-                System.Windows.Forms.Clipboard.SetText(DeviceList.SelectedRows[0].Cells[DeviceListSerial.Name].Value.ToString());
+                string S=DeviceList.SelectedRows[0].Cells[DeviceListSerial.Name].Value.ToString();
+                System.Windows.Forms.Clipboard.SetText(S);
 
             }
             else
