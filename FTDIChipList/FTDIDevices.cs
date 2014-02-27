@@ -41,13 +41,13 @@ namespace FTDIChipList
                     if (State == FTDI.FT_STATUS.FT_OK)
                     {
 
-                        
+
                         DeviceList.Rows.Clear();
                         foreach (FTDI.FT_DEVICE_INFO_NODE D in Devicelist)
                         {
                             int RowIndex = DeviceList.Rows.Add();
                             DeviceList.Rows[RowIndex].Tag = D;
-                            DeviceList.Rows[RowIndex].Cells[DeviceListType.Name].Value = (D.Type==FTDI.FT_DEVICE.FT_DEVICE_232R?"FT245R or FT232R":D.Type.ToString());
+                            DeviceList.Rows[RowIndex].Cells[DeviceListType.Name].Value = (D.Type == FTDI.FT_DEVICE.FT_DEVICE_232R ? "FT245R or FT232R" : D.Type.ToString());
                             DeviceList.Rows[RowIndex].Cells[DeviceListDescription.Name].Value = D.Description;
                             DeviceList.Rows[RowIndex].Cells[DeviceListSerial.Name].Value = D.SerialNumber;
                         }
@@ -96,8 +96,47 @@ namespace FTDIChipList
         {
             if (DeviceList.SelectedRows.Count > 0)
             {
-                string S=DeviceList.SelectedRows[0].Cells[DeviceListSerial.Name].Value.ToString();
-                System.Windows.Forms.Clipboard.SetText(S);
+                string S = DeviceList.SelectedRows[0].Cells[DeviceListSerial.Name].Value.ToString();
+
+                int RetryCnt = 0;
+                bool Done = false;
+                string ExceptionMsg = "";
+                while (!Done && RetryCnt<5)
+                {
+                    try
+                    {
+                        System.Windows.Forms.Clipboard.SetText(S);
+                        Done = true;
+                        
+                    }
+                    catch (Exception E)
+                    {
+                        ExceptionMsg = E.Message;
+                        RetryCnt++;
+                        System.Threading.Thread.Sleep(300);
+                    }
+
+                }
+
+
+                if (!Done)
+                {
+                    string Msg = string.Format("Could not copy the serial to the clipboard.\n\nThe following exception occured:\n{0}", ExceptionMsg);
+
+                    string WindowText = getOpenClipboardWindowText();
+                    if (!string.IsNullOrWhiteSpace(WindowText))
+                    {
+                        Msg += string.Format("\n\nClipboard is currently open for: {0}", WindowText);
+                    }
+
+                    MessageBox.Show(this, Msg, "Copy to clipboard failed", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+
+                }
+                else
+                {
+                    MessageBox.Show(this, string.Format("Copied {0} to clipboard.", S), "Serial copied to clipboard", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+
 
             }
             else
@@ -105,5 +144,30 @@ namespace FTDIChipList
                 MessageBox.Show("You must select a device before copying to serial to the clipboard.", "Select device");
             }
         }
+
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        static extern IntPtr GetOpenClipboardWindow();
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        static extern int GetWindowText(int hwnd, StringBuilder text, int count);
+
+        private string getOpenClipboardWindowText()
+        {
+            IntPtr hwnd = GetOpenClipboardWindow();
+            if (hwnd != IntPtr.Zero)
+            {
+                StringBuilder sb = new StringBuilder(501);
+                GetWindowText(hwnd.ToInt32(), sb, 500);
+                return sb.ToString();
+                // example:
+                // skype_plugin_core_proxy_window: 02490E80
+            }
+            else
+            {
+                return null;
+            }
+        }
+
     }
 }
